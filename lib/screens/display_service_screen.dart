@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:booking_services/utils/constants.dart';
 import 'package:booking_services/widgets/display_service_card.dart';
+import 'package:booking_services/models/service.dart';
 
-class ServicesScreen extends StatelessWidget {
-  const ServicesScreen({super.key});
+class DisplayServiceScreen extends StatelessWidget {
+  const DisplayServiceScreen({super.key});
 
-  Future<List<dynamic>> fetchServices() async {
+  Future<List<Service>> fetchServices() async {
     final response =
     await http.get(Uri.parse(Constants.displayServiceApi));
 
@@ -15,8 +16,13 @@ class ServicesScreen extends StatelessWidget {
       throw Exception("Failed to load services");
     }
 
-    final data = jsonDecode(response.body);
-    return data['services'];
+    final decoded = jsonDecode(response.body);
+
+    final List servicesJson = decoded['services'];
+
+    return servicesJson
+        .map<Service>((json) => Service.fromJson(json))
+        .toList();
   }
 
   @override
@@ -34,10 +40,10 @@ class ServicesScreen extends StatelessWidget {
         child: SafeArea(
           child: Column(
             children: [
+              // Header
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: const [
                     Text(
                       "Services",
@@ -51,6 +57,7 @@ class ServicesScreen extends StatelessWidget {
                 ),
               ),
 
+              // Content
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
@@ -60,7 +67,7 @@ class ServicesScreen extends StatelessWidget {
                       topRight: Radius.circular(24),
                     ),
                   ),
-                  child: FutureBuilder<List<dynamic>>(
+                  child: FutureBuilder<List<Service>>(
                     future: fetchServices(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState ==
@@ -99,8 +106,9 @@ class ServicesScreen extends StatelessWidget {
                             childAspectRatio: 3 / 2,
                           ),
                           itemBuilder: (context, index) {
-                            final service = services[index];
-                            return ServiceCard(service: service);
+                            return DisplayServiceCard(
+                              service: services[index],
+                            );
                           },
                         ),
                       );
