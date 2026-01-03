@@ -13,4 +13,6 @@ class Constants {
 
   static const String displayServiceApi =
       "$baseUrl/API/display_service.php";
+  static const String createBookingApi=
+      "$baseUrl/API/create_booking.php";
 }

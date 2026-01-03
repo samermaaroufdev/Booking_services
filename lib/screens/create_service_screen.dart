@@ -37,7 +37,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse(Constants.service_api),
+        Uri.parse(Constants.serviceApi),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },

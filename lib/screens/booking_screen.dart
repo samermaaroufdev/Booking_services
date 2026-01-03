@@ -1,76 +1,114 @@
+import 'package:booking_services/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+class CreateBookingPage extends StatefulWidget {
+  const CreateBookingPage({super.key});
+  @override
+  State<CreateBookingPage> createState() => _CreateBookingPageState();
+}
+class _CreateBookingPageState extends State<CreateBookingPage> {
+  DateTime? selectedDate;
+  TimeOfDay? selectedTime;
+  bool isLoading = false;
+  Future<void> submitBooking() async {
+    if (selectedDate == null || selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Select date and time")),
+      );
+      return;
+    }
+    setState(() => isLoading = true);
+    final response = await http.post(
+      Uri.parse(Constants.createBookingApi),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "book_date":
+        "${selectedDate!.year}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}",
+        "book_time":
+        "${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}",
+      }),
+    );
+    final data = jsonDecode(response.body);
 
-class BookingScreen extends StatelessWidget {
-  const BookingScreen({super.key});
+    setState(() => isLoading = false);
 
+    if (data["success"]) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Booking saved")),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data["message"])),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF4F46E5), Color(0xFF9333EA)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      appBar: AppBar(title: const Text("Create Booking")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: const [
-                    Text(
-                      "Bookings",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  title: Text(
+                    selectedDate == null
+                        ? "Select booking date"
+                        : selectedDate.toString().split(" ")[0],
+                  ),
+                  trailing: const Icon(Icons.calendar_today),
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      initialDate: DateTime.now(),
+                    );
+                    if (date != null) {
+                      setState(() => selectedDate = date);
+                    }
+                  },
                 ),
-              ),
 
-              Expanded(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(24),
-                      topRight: Radius.circular(24),
-                    ),
+                ListTile(
+                  title: Text(
+                    selectedTime == null
+                        ? "Select booking time"
+                        : selectedTime!.format(context),
                   ),
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(
-                          Icons.event_available,
-                          size: 80,
-                          color: Color(0xFF4F46E5),
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          "No bookings yet",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          "Your booked services will appear here",
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
+                  trailing: const Icon(Icons.access_time),
+                  onTap: () async {
+                    final time = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    if (time != null) {
+                      setState(() => selectedTime = time);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : submitBooking,
+                    child: isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text("Save Booking"),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

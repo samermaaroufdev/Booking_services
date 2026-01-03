@@ -9,7 +9,7 @@ class ServicesScreen extends StatelessWidget {
 
   Future<List<dynamic>> fetchServices() async {
     final response =
-    await http.get(Uri.parse(Constants.display_service_api));
+    await http.get(Uri.parse(Constants.displayServiceApi));
 
     if (response.statusCode != 200) {
       throw Exception("Failed to load services");

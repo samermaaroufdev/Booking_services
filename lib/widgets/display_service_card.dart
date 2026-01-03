@@ -11,7 +11,7 @@ class ServiceCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => booking_screen(service: service),
+            builder: (_) => CreateBookingPage(),
           ),
         );
       },
